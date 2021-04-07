@@ -1,3 +1,3 @@
 new StickyHeader(document.querySelector('.header'), {
-    delayInPixels: 500
+    delayInHeaderWidth: 5
 })

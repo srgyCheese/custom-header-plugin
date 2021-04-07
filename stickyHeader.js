@@ -1,26 +1,50 @@
 class StickyHeader {
-    constructor(element, {delayInPixels}) {
+    constructor(element, options) {
         document.body.style.marginTop = element.offsetHeight + 'px'
-        
-        window.onscroll = () => {
+
+
+        this.element = element
+
+        this.setDelay(options)
+        this.initScrollStickyHeader()
+    }
+
+    initScrollStickyHeader() {
+        window.addEventListener('scroll', () => {
+            const headerHeight = this.element.offsetHeight
             const scroll = document.documentElement.scrollTop
+            const headerTopShift = +this.element.style.top.slice(0, -2)
 
-            const headerTop = +element.style.top.slice(0, -2)
+            if (this.prevScroll) {
+                const scrolled = this.prevScroll - scroll
+    
+                if (scrolled >= 0) {
+                    this.currentDelay = this.clamp(this.currentDelay - scrolled, this.delay, 0)
 
-            const scrolled =  this.prevScroll - scroll
-
-            if (scrolled >= 0) {
-                this.delay -= scrolled
-            } else {
-                this.delay = delay
+                    console.log(this.currentDelay);
+                } else {
+                    this.currentDelay = this.clamp(this.currentDelay - scrolled, this.delay, 0)
+                }
+    
+                if (this.currentDelay <= 0 || headerTopShift > -headerHeight || scroll <= headerHeight) {
+                    this.element.style.top = this.clamp(headerTopShift + scrolled, 0, -headerHeight) + 'px'
+                }
             }
 
-            if (this.delay <= 0 || headerTop > -element.offsetHeight || scroll <= element.offsetHeight) {
-                element.style.top = this.clamp(headerTop + scrolled, 0, -element.offsetHeight) + 'px'
-            }
+            this.prevScroll = scroll
+        })
+    }
 
-            this.prevScroll = document.documentElement.scrollTop
+    setDelay({delayInPixels, delayInHeaderWidth}) {
+        if (delayInPixels) {
+            this.delay = delayInPixels
+        } else if(delayInHeaderWidth) {
+            this.delay = delayInHeaderWidth * this.element.offsetHeight
+        } else {
+            this.delay = 0
         }
+
+        this.currentDelay = this.delay
     }
 
     clamp(num, maxValue, minValue) {
