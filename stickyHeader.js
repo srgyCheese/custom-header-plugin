@@ -2,7 +2,6 @@ class StickyHeader {
     constructor(element, options) {
         document.body.style.marginTop = element.offsetHeight + 'px'
 
-
         this.element = element
 
         this.setDelay(options)
@@ -17,16 +16,12 @@ class StickyHeader {
 
             if (this.prevScroll) {
                 const scrolled = this.prevScroll - scroll
-    
-                if (scrolled >= 0) {
-                    this.currentDelay = this.clamp(this.currentDelay - scrolled, this.delay, 0)
 
-                    console.log(this.currentDelay);
-                } else {
-                    this.currentDelay = this.clamp(this.currentDelay - scrolled, this.delay, 0)
-                }
+                this.currentDelay = this.clamp(this.currentDelay - scrolled, this.delay, 0)
+
+                console.log(this.currentDelay);
     
-                if (this.currentDelay <= 0 || headerTopShift > -headerHeight || scroll <= headerHeight) {
+                if (this.currentDelay <= headerHeight || headerTopShift > -headerHeight || scroll <= headerHeight) {
                     this.element.style.top = this.clamp(headerTopShift + scrolled, 0, -headerHeight) + 'px'
                 }
             }
@@ -44,7 +39,7 @@ class StickyHeader {
             this.delay = 0
         }
 
-        this.currentDelay = this.delay
+        this.currentDelay = 0
     }
 
     clamp(num, maxValue, minValue) {
