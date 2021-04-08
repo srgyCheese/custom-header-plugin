@@ -1,4 +1,4 @@
-class StickyHeader {
+class StretchyHeader {
     constructor(element, options) {
         if (options.moveBody) {
             document.body.style.marginTop = element.offsetHeight + 'px'
@@ -7,11 +7,11 @@ class StickyHeader {
         this.element = element
 
         this.setDelay(options)
-        this.initScrollStickyHeader()
+        this.initScrollStretchyHeader()
         this.initMobileHeaderAutoShift()
     }
 
-    initScrollStickyHeader() {
+    initScrollStretchyHeader() {
         window.addEventListener('scroll', () => {
             const headerHeight = this.element.offsetHeight
             const scroll = document.documentElement.scrollTop
