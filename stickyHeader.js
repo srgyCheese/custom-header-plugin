@@ -1,11 +1,14 @@
 class StickyHeader {
     constructor(element, options) {
-        document.body.style.marginTop = element.offsetHeight + 'px'
+        if (options.moveBody) {
+            document.body.style.marginTop = element.offsetHeight + 'px'
+        }
 
         this.element = element
 
         this.setDelay(options)
         this.initScrollStickyHeader()
+        this.initMobileHeaderAutoShift()
     }
 
     initScrollStickyHeader() {
@@ -18,8 +21,6 @@ class StickyHeader {
                 const scrolled = this.prevScroll - scroll
 
                 this.currentDelay = this.clamp(this.currentDelay - scrolled, this.delay, 0)
-
-                console.log(this.currentDelay);
     
                 if (this.currentDelay <= headerHeight || headerTopShift > -headerHeight || scroll <= headerHeight) {
                     this.element.style.top = this.clamp(headerTopShift + scrolled, 0, -headerHeight) + 'px'
@@ -27,6 +28,36 @@ class StickyHeader {
             }
 
             this.prevScroll = scroll
+        })
+    }
+
+    initMobileHeaderAutoShift() {
+        this.element.addEventListener('transitionend', () => {
+            const headerHeight = this.element.offsetHeight
+
+            if (this.element.classList.contains('header-opened')) {
+                this.element.classList.remove('header-opened')
+                this.element.style.top = 0
+            }
+
+            if (this.element.classList.contains('header-closed')) {
+                this.element.classList.remove('header-closed')
+                this.element.style.top = -headerHeight + 'px'
+            }
+        })
+        
+        window.addEventListener('touchend', () => {
+            const headerHeight = this.element.offsetHeight
+            const headerTopShift = +this.element.style.top.slice(0, -2)
+
+            if (headerTopShift < 0 && headerTopShift > -headerHeight) {
+                if (-headerTopShift < headerHeight / 2) {
+                    this.element.classList.add('header-opened')
+                } else {
+                    this.element.classList.add('header-closed')
+                    console.log({headerTopShift, headerHeight})
+                }
+            }
         })
     }
 

@@ -7,9 +7,27 @@ body {
     position: fixed;
     top: 0;
     width: 100%;
-    height: 120px;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.header span {
+    color: white;
+    font-size: 24px;
 }
 
 .content {
     height: 10000px;
+}
+
+.header-opened {
+    top: 0 !important;
+    transition: 0.2s;
+}
+
+.header-closed {
+    top: -80px !important;
+    transition: 0.2s;
 }
