@@ -12,7 +12,7 @@ class StretchyHeader {
     }
 
     initScrollStretchyHeader() {
-        window.addEventListener('scroll', () => {
+        this.scrollStretchyHeaderListener = () => {
             const headerHeight = this.element.offsetHeight
             const scroll = document.documentElement.scrollTop
             const headerTopShift = +this.element.style.top.slice(0, -2)
@@ -28,11 +28,13 @@ class StretchyHeader {
             }
 
             this.prevScroll = scroll
-        })
+        }
+
+        window.addEventListener('scroll', this.scrollStretchyHeaderListener)
     }
 
     initMobileHeaderAutoShift() {
-        this.element.addEventListener('transitionend', () => {
+        this.headerTransitionEndListener = () => {
             const headerHeight = this.element.offsetHeight
 
             if (this.element.classList.contains('header-opened')) {
@@ -44,9 +46,11 @@ class StretchyHeader {
                 this.element.classList.remove('header-closed')
                 this.element.style.top = -headerHeight + 'px'
             }
-        })
-        
-        window.addEventListener('touchend', () => {
+        }
+
+        this.element.addEventListener('transitionend', this.headerTransitionEndListener)
+
+        this.touchEndListener = () => {
             const headerHeight = this.element.offsetHeight
             const headerTopShift = +this.element.style.top.slice(0, -2)
 
@@ -55,10 +59,11 @@ class StretchyHeader {
                     this.element.classList.add('header-opened')
                 } else {
                     this.element.classList.add('header-closed')
-                    console.log({headerTopShift, headerHeight})
                 }
             }
-        })
+        }
+        
+        window.addEventListener('touchend', this.touchEndListener)
     }
 
     setDelay({delayInPixels, delayInHeaderWidth}) {
@@ -71,6 +76,12 @@ class StretchyHeader {
         }
 
         this.currentDelay = 0
+    }
+
+    destroy() {
+        window.removeEventListener('scroll', this.scrollStretchyHeaderListener)
+        this.element.removeEventListener('transitionend', this.headerTransitionEndListener)
+        window.removeEventListener('touchend', this.touchEndListener)
     }
 
     clamp(num, maxValue, minValue) {
