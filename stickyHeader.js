@@ -1,9 +1,5 @@
 class StretchyHeader {
     constructor(element, options) {
-        if (options.moveBody) {
-            document.body.style.marginTop = element.offsetHeight + 'px'
-        }
-
         this.element = element
 
         this.setDelay(options)
@@ -14,29 +10,28 @@ class StretchyHeader {
             scrolled: null
         }
 
+        this.scroll.prevScroll = document.documentElement.scrollTop
+
         window.addEventListener('scroll', this.scrollStretchyHeader)
         window.addEventListener('touchend', this.mobileHeaderAutoShift)
     }
 
     scrollStretchyHeader = () => {
         const headerHeight = this.element.offsetHeight
-
         this.scroll.scroll = document.documentElement.scrollTop
-
-        this.updateElementClass()
 
         const headerTopShift = +this.element.style.top.slice(0, -2)
 
-        if (this.scroll.prevScroll) {
-            this.scroll.scrolled = this.scroll.prevScroll - this.scroll.scroll
+        this.updateElementClass()
 
-            if (headerHeight <= -headerTopShift) {
-                this.currentDelay = this.clamp(this.currentDelay - this.scroll.scrolled, this.delay, 0)
-            }
+        this.scroll.scrolled = this.scroll.prevScroll - this.scroll.scroll
 
-            if (this.currentDelay <= headerHeight || headerTopShift > -headerHeight || this.scroll.scroll <= headerHeight) {
-                this.element.style.top = this.clamp(headerTopShift + this.scroll.scrolled, 0, -headerHeight) + 'px'
-            }
+        if (headerHeight <= -headerTopShift) {
+            this.currentDelay = this.clamp(this.currentDelay - this.scroll.scrolled, this.delay, 0)
+        }
+
+        if (this.currentDelay <= headerHeight || headerTopShift > -headerHeight || this.scroll.scroll <= headerHeight) {
+            this.element.style.top = this.clamp(headerTopShift + this.scroll.scrolled, 0, -headerHeight) + 'px'
         }
 
         this.scroll.prevScroll = this.scroll.scroll
@@ -50,7 +45,7 @@ class StretchyHeader {
             this.element.classList.remove('header-opened')
         }
 
-        if (scrolled > 0 && this.currentDelay <= 0) {
+        if (scrolled > 0) {
             this.element.classList.remove('header-closed')
         }
     }
