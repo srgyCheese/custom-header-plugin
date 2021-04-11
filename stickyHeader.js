@@ -7,63 +7,63 @@ class StretchyHeader {
         this.element = element
 
         this.setDelay(options)
-        this.initScrollStretchyHeader()
-        this.initMobileHeaderAutoShift()
+
+        this.scroll = {
+            prevScroll: null,
+            scroll: null,
+            scrolled: null
+        }
+
+        window.addEventListener('scroll', this.scrollStretchyHeader)
+        window.addEventListener('touchend', this.mobileHeaderAutoShift)
     }
 
-    initScrollStretchyHeader() {
-        this.scrollStretchyHeaderListener = () => {
-            const headerHeight = this.element.offsetHeight
-            const scroll = document.documentElement.scrollTop
-            const headerTopShift = +this.element.style.top.slice(0, -2)
+    scrollStretchyHeader = () => {
+        const headerHeight = this.element.offsetHeight
 
-            if (this.prevScroll) {
-                const scrolled = this.prevScroll - scroll
+        this.scroll.scroll = document.documentElement.scrollTop
 
-                this.currentDelay = this.clamp(this.currentDelay - scrolled, this.delay, 0)
-    
-                if (this.currentDelay <= headerHeight || headerTopShift > -headerHeight || scroll <= headerHeight) {
-                    this.element.style.top = this.clamp(headerTopShift + scrolled, 0, -headerHeight) + 'px'
-                }
+        this.updateElementClass()
+
+        const headerTopShift = +this.element.style.top.slice(0, -2)
+
+        if (this.scroll.prevScroll) {
+            this.scroll.scrolled = this.scroll.prevScroll - this.scroll.scroll
+
+            this.currentDelay = this.clamp(this.currentDelay - this.scroll.scrolled, this.delay, 0)
+
+            if (this.currentDelay <= headerHeight || headerTopShift > -headerHeight || this.scroll.scroll <= headerHeight) {
+                this.element.style.top = this.clamp(headerTopShift + this.scroll.scrolled, 0, -headerHeight) + 'px'
             }
-
-            this.prevScroll = scroll
         }
 
-        window.addEventListener('scroll', this.scrollStretchyHeaderListener)
+        this.scroll.prevScroll = this.scroll.scroll
     }
 
-    initMobileHeaderAutoShift() {
-        this.headerTransitionEndListener = () => {
-            const headerHeight = this.element.offsetHeight
+    updateElementClass() {
+        this.element.style.top = this.element.offsetTop + 'px'
+        const {scrolled} = this.scroll
 
-            if (this.element.classList.contains('header-opened')) {
-                this.element.classList.remove('header-opened')
-                this.element.style.top = 0
-            }
-
-            if (this.element.classList.contains('header-closed')) {
-                this.element.classList.remove('header-closed')
-                this.element.style.top = -headerHeight + 'px'
-            }
+        if (scrolled < 0) {
+            this.element.classList.remove('header-opened')
         }
 
-        this.element.addEventListener('transitionend', this.headerTransitionEndListener)
+        if (scrolled > 0 && this.currentDelay <= 0) {
+            this.element.classList.remove('header-closed')
+        }
+    }
 
-        this.touchEndListener = () => {
-            const headerHeight = this.element.offsetHeight
-            const headerTopShift = +this.element.style.top.slice(0, -2)
+    mobileHeaderAutoShift = () => {
+        const headerHeight = this.element.offsetHeight
+        const headerTopShift = +this.element.style.top.slice(0, -2)
 
-            if (headerTopShift < 0 && headerTopShift > -headerHeight) {
-                if (-headerTopShift < headerHeight / 2) {
-                    this.element.classList.add('header-opened')
-                } else {
-                    this.element.classList.add('header-closed')
-                }
+        if (headerTopShift <= 0 && headerTopShift >= -headerHeight) {
+            if (-headerTopShift < headerHeight / 2) {
+                this.element.classList.add('header-opened')
+            } else {
+                this.element.classList.add('header-closed')
             }
         }
-        
-        window.addEventListener('touchend', this.touchEndListener)
     }
 
     setDelay({delayInPixels, delayInHeaderWidth}) {
@@ -79,9 +79,8 @@ class StretchyHeader {
     }
 
     destroy() {
-        window.removeEventListener('scroll', this.scrollStretchyHeaderListener)
-        this.element.removeEventListener('transitionend', this.headerTransitionEndListener)
-        window.removeEventListener('touchend', this.touchEndListener)
+        window.removeEventListener('scroll', this.scrollStretchyHeader)
+        window.removeEventListener('touchend', this.mobileHeaderAutoShift)
     }
 
     clamp(num, maxValue, minValue) {
