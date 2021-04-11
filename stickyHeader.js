@@ -30,7 +30,9 @@ class StretchyHeader {
         if (this.scroll.prevScroll) {
             this.scroll.scrolled = this.scroll.prevScroll - this.scroll.scroll
 
-            this.currentDelay = this.clamp(this.currentDelay - this.scroll.scrolled, this.delay, 0)
+            if (headerHeight <= -headerTopShift) {
+                this.currentDelay = this.clamp(this.currentDelay - this.scroll.scrolled, this.delay, 0)
+            }
 
             if (this.currentDelay <= headerHeight || headerTopShift > -headerHeight || this.scroll.scroll <= headerHeight) {
                 this.element.style.top = this.clamp(headerTopShift + this.scroll.scrolled, 0, -headerHeight) + 'px'
