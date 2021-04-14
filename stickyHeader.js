@@ -1,63 +1,92 @@
+const clamp = (num, maxValue, minValue) => {
+    if (num <= minValue) {
+        return minValue
+    }
+
+    if (num >= maxValue) {
+        return maxValue
+    }
+
+    return num
+}
+
 class StretchyHeader {
     constructor(element, options) {
         this.element = element
 
         this.setDelay(options)
 
-        this.scroll = {
-            prevScroll: null,
-            scroll: null,
-            scrolled: null
-        }
+        this.scroll = new StretchyScrollControl()
 
-        this.scroll.prevScroll = document.documentElement.scrollTop
+        this.prevHeaderTop = 0
 
         window.addEventListener('scroll', this.scrollStretchyHeader)
-        window.addEventListener('touchend', this.mobileHeaderAutoShift)
+
+        if (options.autoShift === 'header') {
+            window.addEventListener('touchend', this.mobileHeaderAutoShift)
+        }
     }
 
     scrollStretchyHeader = () => {
+        this.scroll.updateScrolled()
+
         const headerHeight = this.element.offsetHeight
-        this.scroll.scroll = document.documentElement.scrollTop
+        const headerTopShift = this.element.offsetTop
 
-        const headerTopShift = +this.element.style.top.slice(0, -2)
+        const prevDelay = this.currentDelay
 
+        if (-headerTopShift == headerHeight) {
+            let scrollDeflection = 0
+            if (this.prevHeaderTop > headerTopShift) {
+                scrollDeflection = (headerHeight + this.prevHeaderTop + this.scroll.prevScrolled)
+            }
+
+            this.currentDelay = clamp(this.currentDelay - this.scroll.scrolled - scrollDeflection, this.delay, 0)
+        } else {
+            this.currentDelay = 0
+        }
+        
         this.updateElementClass()
 
-        this.scroll.scrolled = this.scroll.prevScroll - this.scroll.scroll
+        if (this.currentDelay == 0 || this.scroll.scroll <= headerHeight) {
+            let headerDeflection = 0            
+            if (headerTopShift + this.scroll.scrolled > headerTopShift && headerTopShift == -headerHeight) {
+                headerDeflection = prevDelay
+            }
 
-        if (headerHeight <= -headerTopShift) {
-            this.currentDelay = this.clamp(this.currentDelay - this.scroll.scrolled, this.delay, 0)
+            const newHeaderTopShift = clamp(headerTopShift + this.scroll.scrolled - headerDeflection, 0, -headerHeight)
+
+            this.element.style.top = newHeaderTopShift + 'px'
         }
 
-        if (this.currentDelay <= headerHeight || headerTopShift > -headerHeight || this.scroll.scroll <= headerHeight) {
-            this.element.style.top = this.clamp(headerTopShift + this.scroll.scrolled, 0, -headerHeight) + 'px'
-        }
-
-        this.scroll.prevScroll = this.scroll.scroll
+        this.scroll.updatePrevValues()
+        this.prevHeaderTop = headerTopShift
     }
 
     updateElementClass() {
-        this.element.style.top = this.element.offsetTop + 'px'
+        const headerTopShift = this.element.offsetTop
+        const headerHeight = this.element.offsetHeight
         const {scrolled} = this.scroll
 
-        if (scrolled < 0) {
-            this.element.classList.remove('header-opened')
-        }
-
-        if (scrolled > 0) {
-            this.element.classList.remove('header-closed')
+        if (-headerTopShift == 0 || headerTopShift == -headerHeight) {
+            if (scrolled < 0) {
+                this.element.classList.remove('header-opened')
+            } else {
+                this.element.classList.remove('header-closed')
+            }
         }
     }
 
     mobileHeaderAutoShift = () => {
         const headerHeight = this.element.offsetHeight
-        const headerTopShift = +this.element.style.top.slice(0, -2)
+        const headerTopShift = this.element.offsetTop
+
+        console.log({headerTopShift, headerHeight});
 
         if (headerTopShift <= 0 && headerTopShift >= -headerHeight) {
             if (-headerTopShift < headerHeight / 2) {
                 this.element.classList.add('header-opened')
-            } else {
+            } else if (this.scroll.scroll > headerHeight) {
                 this.element.classList.add('header-closed')
             }
         }
@@ -79,16 +108,22 @@ class StretchyHeader {
         window.removeEventListener('scroll', this.scrollStretchyHeader)
         window.removeEventListener('touchend', this.mobileHeaderAutoShift)
     }
+}
 
-    clamp(num, maxValue, minValue) {
-        if (num <= minValue) {
-            return minValue
-        }
-    
-        if (num >= maxValue) {
-            return maxValue
-        }
 
-        return num
+class StretchyScrollControl {
+    constructor() {
+        this.prevScrolled = 0
+        this.prevScroll = document.documentElement.scrollTop
+    }
+
+    updateScrolled() {
+        this.scroll = document.documentElement.scrollTop
+        this.scrolled = this.prevScroll - this.scroll
+    }
+
+    updatePrevValues() {
+        this.prevScrolled = this.scrolled
+        this.prevScroll = this.scroll
     }
 }
