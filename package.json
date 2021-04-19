@@ -3,9 +3,6 @@
   "version": "0.4.0",
   "description": "Pretty cool header plugin writed on vanilla js",
   "main": ".dist/stretchyHeader.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [
     "custom",
     "header",

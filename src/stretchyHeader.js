@@ -14,6 +14,7 @@
     class StretchyHeader {
         constructor(element, options) {
             this.element = element
+            this.options = options
     
             this.setDelay(options)
     
@@ -23,7 +24,7 @@
     
             window.addEventListener('scroll', this.scrollStretchyHeader)
     
-            if (options.autoShift === 'header') {
+            if (options.autoShift.type === 'header') {
                 window.addEventListener('touchend', this.mobileHeaderAutoShift)
             }
         }
@@ -71,9 +72,9 @@
     
             if (-headerTopShift == 0 || headerTopShift == -headerHeight) {
                 if (scrolled < 0) {
-                    this.element.classList.remove('header-opened')
+                    this.element.classList.remove(this.options.autoShift.openedClass)
                 } else {
-                    this.element.classList.remove('header-closed')
+                    this.element.classList.remove(this.options.autoShift.closedClass)
                 }
             }
         }
@@ -84,9 +85,9 @@
     
             if (headerTopShift <= 0 && headerTopShift >= -headerHeight) {
                 if (-headerTopShift < headerHeight / 2) {
-                    this.element.classList.add('header-opened')
+                    this.element.classList.add(this.options.autoShift.openedClass)
                 } else if (this.scroll.scroll > headerHeight) {
-                    this.element.classList.add('header-closed')
+                    this.element.classList.add(this.options.autoShift.closedClass)
                 }
             }
         }
