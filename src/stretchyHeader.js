@@ -15,8 +15,9 @@
         constructor(element, options) {
             this.element = element
             this.options = options
+            this.options.autoShift = options.autoShift || {}
     
-            this.setDelay(options)
+            this.setDelay(options.delay)
     
             this.scroll = new StretchyScrollControl()
     
@@ -66,15 +67,18 @@
         }
     
         updateElementClass() {
-            const headerTopShift = this.element.offsetTop
-            const headerHeight = this.element.offsetHeight
-            const {scrolled} = this.scroll
-    
-            if (-headerTopShift == 0 || headerTopShift == -headerHeight) {
-                if (scrolled < 0) {
-                    this.element.classList.remove(this.options.autoShift.openedClass)
-                } else {
-                    this.element.classList.remove(this.options.autoShift.closedClass)
+            const {autoShift} = this.options
+            if (autoShift.openedClass && autoShift.closedClass) {
+                const headerTopShift = this.element.offsetTop
+                const headerHeight = this.element.offsetHeight
+                const {scrolled} = this.scroll
+        
+                if (-headerTopShift == 0 || headerTopShift == -headerHeight) {
+                    if (scrolled < 0) {
+                        this.element.classList.remove(this.options.autoShift.openedClass)
+                    } else {
+                        this.element.classList.remove(this.options.autoShift.closedClass)
+                    }
                 }
             }
         }
@@ -92,11 +96,11 @@
             }
         }
     
-        setDelay({delayInPixels, delayInHeaderWidth}) {
-            if (delayInPixels) {
-                this.delay = delayInPixels
-            } else if(delayInHeaderWidth) {
-                this.delay = delayInHeaderWidth * this.element.offsetHeight
+        setDelay({inPixels, inHeaderHeight}) {
+            if (inPixels) {
+                this.delay = inPixels
+            } else if(inHeaderHeight) {
+                this.delay = inHeaderHeight * this.element.offsetHeight
             } else {
                 this.delay = 0
             }
