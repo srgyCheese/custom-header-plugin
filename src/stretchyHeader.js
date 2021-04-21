@@ -1,4 +1,4 @@
-{
+(() => {
     const clamp = (num, maxValue, minValue) => {
         if (num <= minValue) {
             return minValue
@@ -137,4 +137,4 @@
     } else {
         window.StretchyHeader = StretchyHeader
     }
-}
+})()
