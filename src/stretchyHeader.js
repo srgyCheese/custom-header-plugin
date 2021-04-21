@@ -15,9 +15,13 @@
         constructor(element, options) {
             this.element = element
             this.options = options
-            this.options.autoShift = options.autoShift || {}
+            this.options = {
+                autoShift: {},
+                delay: {},
+                ...options
+            }
     
-            this.setDelay(options.delay)
+            this.setDelay(this.options.delay)
     
             this.scroll = new StretchyScrollControl()
     
@@ -25,7 +29,7 @@
     
             window.addEventListener('scroll', this.scrollStretchyHeader)
     
-            if (options.autoShift.type === 'header') {
+            if (this.options.autoShift.type === 'header') {
                 window.addEventListener('touchend', this.mobileHeaderAutoShift)
             }
         }
@@ -52,7 +56,7 @@
             this.updateElementClass()
     
             if (this.currentDelay == 0 || this.scroll.scroll <= headerHeight) {
-                let headerDeflection = 0            
+                let headerDeflection = 0
                 if (headerTopShift + this.scroll.scrolled > headerTopShift && headerTopShift == -headerHeight) {
                     headerDeflection = prevDelay
                 }
@@ -92,6 +96,21 @@
                     this.element.classList.add(this.options.autoShift.openedClass)
                 } else if (this.scroll.scroll > headerHeight) {
                     this.element.classList.add(this.options.autoShift.closedClass)
+                } else {
+                    console.log('setTimeout');
+                    setTimeout((function run() {
+                        const scroll = document.documentElement.scrollTop
+                        const newHeaderTopShift = this.element.offsetTop
+                        console.log({newHeaderTopShift, scroll});
+
+                        if (-newHeaderTopShift < scroll) {
+                            const updTopShift = clamp(newHeaderTopShift - 2, 0, -scroll)
+
+                            this.element.style.top = updTopShift + 'px'
+
+                            setTimeout(run.bind(this), 10);
+                        }
+                    }).bind(this), 10)
                 }
             }
         }
