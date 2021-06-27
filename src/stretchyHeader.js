@@ -24,14 +24,11 @@
             this.setDelay(this.options.delay)
     
             this.scroll = new StretchyScrollControl()
+            this.shiftStrategy = this.options?.autoShift?.type == 'header' ? new HeaderAutoShift(this) : null
     
             this.prevHeaderTop = 0
     
             window.addEventListener('scroll', this.scrollStretchyHeader)
-    
-            if (this.options.autoShift.type === 'header') {
-                window.addEventListener('touchend', this.mobileHeaderAutoShift)
-            }
         }
     
         scrollStretchyHeader = () => {
@@ -53,7 +50,7 @@
                 this.currentDelay = 0
             }
             
-            this.updateElementClass()
+            this.shiftStrategy.updateElementClass()
     
             if (this.currentDelay == 0 || this.scroll.scroll <= headerHeight) {
                 let headerDeflection = 0
@@ -68,51 +65,6 @@
     
             this.scroll.updatePrevValues()
             this.prevHeaderTop = headerTopShift
-        }
-    
-        updateElementClass() {
-            const {autoShift} = this.options
-            if (autoShift.openedClass && autoShift.closedClass) {
-                const headerTopShift = this.element.offsetTop
-                const headerHeight = this.element.offsetHeight
-                const {scrolled} = this.scroll
-        
-                if (-headerTopShift == 0 || headerTopShift == -headerHeight) {
-                    if (scrolled < 0) {
-                        this.element.classList.remove(this.options.autoShift.openedClass)
-                    } else {
-                        this.element.classList.remove(this.options.autoShift.closedClass)
-                    }
-                }
-            }
-        }
-    
-        mobileHeaderAutoShift = () => {
-            const headerHeight = this.element.offsetHeight
-            const headerTopShift = this.element.offsetTop
-    
-            if (headerTopShift <= 0 && headerTopShift >= -headerHeight) {
-                if (-headerTopShift < headerHeight / 2) {
-                    this.element.classList.add(this.options.autoShift.openedClass)
-                } else if (this.scroll.scroll > headerHeight) {
-                    this.element.classList.add(this.options.autoShift.closedClass)
-                } else {
-                    console.log('setTimeout');
-                    setTimeout((function run() {
-                        const scroll = document.documentElement.scrollTop
-                        const newHeaderTopShift = this.element.offsetTop
-                        console.log({newHeaderTopShift, scroll});
-
-                        if (-newHeaderTopShift < scroll) {
-                            const updTopShift = clamp(newHeaderTopShift - 2, 0, -scroll)
-
-                            this.element.style.top = updTopShift + 'px'
-
-                            setTimeout(run.bind(this), 10);
-                        }
-                    }).bind(this), 10)
-                }
-            }
         }
     
         setDelay({inPixels, inHeaderHeight}) {
@@ -130,6 +82,89 @@
         destroy() {
             window.removeEventListener('scroll', this.scrollStretchyHeader)
             window.removeEventListener('touchend', this.mobileHeaderAutoShift)
+        }
+
+        open() {
+            this.shiftStrategy.open()
+        }
+
+        close() {
+            this.shiftStrategy.close()
+        }
+
+        shift() {
+            this.shiftStrategy.shift()
+        }
+    }
+
+    class HeaderAutoShift {
+        constructor(stretchyHeader) {
+            this.stretchyHeader = stretchyHeader
+            window.addEventListener('touchend', this.shift)
+        }
+
+        updateElementClass() {
+            const {element} = this.stretchyHeader
+
+            const {autoShift} = this.stretchyHeader.options
+            if (autoShift.openedClass && autoShift.closedClass) {
+                const headerTopShift = element.offsetTop
+                const headerHeight = element.offsetHeight
+                const {scrolled} = this.stretchyHeader.scroll
+        
+                if (-headerTopShift == 0 || headerTopShift == -headerHeight) {
+                    if (scrolled < 0) {
+                        element.classList.remove(this.stretchyHeader.options.autoShift.openedClass)
+                    } else {
+                        element.classList.remove(this.stretchyHeader.options.autoShift.closedClass)
+                    }
+                }
+            }
+        }
+
+        open() {
+            const {element} = this.stretchyHeader
+            element.classList.remove(this.stretchyHeader.options.autoShift.closedClass)
+            element.classList.add(this.stretchyHeader.options.autoShift.openedClass)
+        }
+
+        close() {
+            const {element} = this.stretchyHeader
+            element.classList.remove(this.stretchyHeader.options.autoShift.openedClass)
+            element.classList.add(this.stretchyHeader.options.autoShift.closedClass)
+        }
+    
+        shift = () => {
+            const {element} = this.stretchyHeader
+            const headerHeight = element.offsetHeight
+            const headerTopShift = element.offsetTop
+    
+            if (headerTopShift <= 0 && headerTopShift >= -headerHeight) {
+                if (-headerTopShift < headerHeight / 2) {
+                    this.open()
+                } else if (this.stretchyHeader.scroll.scroll > headerHeight) {
+                    this.close()
+                } else {
+                    const closingHeader = e => {
+                        window.requestAnimationFrame(function scrollWindow() {
+                            window.scrollTo(null, -element.offsetTop)
+                            // console.log(element.offsetTop);
+                            if (element.offsetTop != 0 && element.offsetTop != -headerHeight) {
+                                window.requestAnimationFrame(scrollWindow)
+                            }
+                        })
+                    }
+                    
+
+                    element.addEventListener('transitionstart', closingHeader)
+                    element.addEventListener('transitionend', function transitionEnd() {
+                        element.removeEventListener('transitionstart', closingHeader)
+                        element.removeEventListener('transitionend', transitionEnd)
+                    })
+
+                    this.close()
+                }
+            }
         }
     }
     
